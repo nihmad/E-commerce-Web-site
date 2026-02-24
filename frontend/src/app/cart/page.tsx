@@ -28,26 +28,28 @@ export default function CartPage() {
 
   if (cart.length === 0) {
     return (
-      <main className="min-h-screen bg-gray-50 p-8">
-        <h1 className="text-2xl font-bold mb-4">Mon panier</h1>
+      <main className="page-shell">
+        <section className="page-container max-w-3xl">
+        <h1 className="section-title mb-4">Mon panier</h1>
         <p className="text-gray-500 mb-4">Votre panier est vide.</p>
         <Link href="/" className="text-blue-600 hover:underline">
           Parcourir les catégories
         </Link>
+        </section>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <section className="max-w-3xl mx-auto py-10 px-4">
-        <h1 className="text-2xl font-bold mb-6">Mon panier</h1>
+    <main className="page-shell">
+      <section className="page-container max-w-3xl">
+        <h1 className="section-title mb-6">Mon panier</h1>
 
         <div className="space-y-4">
           {cart.map((item) => (
             <div
               key={item.productId}
-              className="flex items-center gap-4 bg-white rounded-lg shadow p-4"
+              className="surface-card flex items-center gap-4 p-4"
             >
               {item.image_url && (
                 <img
@@ -97,7 +99,7 @@ export default function CartPage() {
         <div className="mt-8 flex items-center justify-between">
           <button
             onClick={() => clearCart()}
-            className="text-red-500 text-sm hover:underline"
+            className="btn-danger text-sm"
           >
             Vider le panier
           </button>
@@ -107,7 +109,7 @@ export default function CartPage() {
             </p>
             <Link
               href="/checkout"
-              className="inline-block mt-3 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+              className="inline-block mt-3 btn-primary"
             >
               Passer au paiement
             </Link>

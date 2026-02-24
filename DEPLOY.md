@@ -1,56 +1,139 @@
-# Déploiement Option B
+# Déploiement production (Render + Vercel + Stripe)
 
-## Architecture
+## Architecture cible
 
 - **Frontend** : Vercel (Next.js)
-- **Backend** : Railway (Django)
-- **Base de données** : PostgreSQL (Railway)
-- **Cache** : Redis (Upstash ou Redis Cloud)
+- **Backend API** : Render Web Service (Django + Gunicorn)
+- **DB** : PostgreSQL Render
+- **Paiement** : Stripe Checkout + Webhook
+- **Cache Redis** : optionnel (ajoutable plus tard)
 
 ---
 
-## 1. Backend sur Railway
+## 1) Backend sur Render
 
-1. Crée un compte sur [railway.app](https://railway.app)
-2. "New Project" → "Deploy from GitHub repo" → sélectionne `nihmad/E-commerce-Web-site`
-3. Railway détecte le monorepo : configure le **Root Directory** = `backend`
-4. Ajoute un service **PostgreSQL** (Railway fournit `DATABASE_URL`)
-5. (Optionnel) Ajoute **Redis** via Upstash ou Redis Cloud, puis `REDIS_URL`
-6. Variables d'environnement à définir :
-   - `STRIPE_API_KEY`
-   - `STRIPE_WEBHOOK_SECRET`
-   - `DJANGO_SECRET_KEY`
-   - `JWT_SECRET_KEY`
-   - `FRONTEND_URL` = URL Vercel (ex. `https://xxx.vercel.app`)
-   - `CORS_ALLOWED_ORIGINS` = `https://xxx.vercel.app`
-   - `ALLOWED_HOSTS` = `xxx.railway.app,localhost`
-   - `DEBUG` = `False`
-7. Déploie → récupère l’URL du backend (ex. `https://xxx.railway.app`)
+### 1.1 Créer les services
 
----
+1. Créer une base **PostgreSQL** sur Render (même région que le backend).
+2. Créer un **Web Service** connecté au repo GitHub.
+3. Runtime Python, branche `main`.
 
-## 2. Frontend sur Vercel
+### 1.2 Build / Start
 
-1. Crée un compte sur [vercel.com](https://vercel.com)
-2. "Import" → GitHub → `nihmad/E-commerce-Web-site`
-3. **Root Directory** = `frontend`
-4. Variable d'environnement :
-   - `NEXT_PUBLIC_API_BASE_URL` = URL du backend Railway
-5. Déploie → récupère l’URL (ex. `https://xxx.vercel.app`)
+- Build command:
 
----
+```bash
+pip install -r requirements.txt
+```
 
-## 3. Stripe (webhook en prod)
+- Start command:
 
-1. Dashboard Stripe → Webhooks → Add endpoint
-2. URL : `https://ton-backend.railway.app/api/payments/webhook/`
-3. Événements : `checkout.session.completed`, `payment_intent.succeeded`
-4. Copie le **Signing secret** → `STRIPE_WEBHOOK_SECRET` dans Railway
+```bash
+python manage.py migrate --noinput && gunicorn ecommerce_backend.wsgi --bind 0.0.0.0:$PORT
+```
+
+### 1.3 Variables d'environnement (service backend Render)
+
+- `DATABASE_URL` = **Internal Database URL** Render
+- `DJANGO_SECRET_KEY` = clé aléatoire longue
+- `JWT_SECRET_KEY` = clé aléatoire longue (différente)
+- `DJANGO_DEBUG` = `False`
+- `DJANGO_ALLOWED_HOSTS` = domaine Render backend, ex: `e-commerce-web-site-pawj.onrender.com`
+- `FRONTEND_URL` = URL Vercel frontend (sans slash final)
+- `CORS_ALLOWED_ORIGINS` = URL(s) frontend Vercel (sans slash final, séparées par `,`)
+- `STRIPE_API_KEY` = `sk_test_...` ou `sk_live_...`
+- `STRIPE_WEBHOOK_SECRET` = `whsec_...`
+
+> Important : après chaque modif d'env vars, cliquer **Save, rebuild, and deploy**.
 
 ---
 
-## 4. Mise à jour des URLs
+## 2) Frontend sur Vercel
 
-- Dans Railway : `FRONTEND_URL` = URL Vercel
-- Dans Vercel : `NEXT_PUBLIC_API_BASE_URL` = URL Railway
-- Redéploie si besoin après modification des variables.
+1. Import du repo GitHub.
+2. **Root Directory** = `frontend`.
+3. Ajouter la variable:
+
+- `NEXT_PUBLIC_API_BASE_URL` = URL backend Render (ex: `https://e-commerce-web-site-pawj.onrender.com`)
+
+4. Deploy / Redeploy.
+
+---
+
+## 3) Admin Django en production
+
+URL admin:
+
+- `https://<backend-render>/admin/`
+
+Remarque importante:
+
+- Les données locales (SQLite) ne sont **pas** copiées en prod.
+- La DB Postgres Render démarre vide, il faut recréer catégories/produits en prod.
+
+---
+
+## 4) Stripe Webhook en production
+
+1. Stripe Dashboard (test ou live) → **Webhooks** → Add endpoint.
+2. Endpoint:
+
+```text
+https://<backend-render>/api/payments/webhook/
+```
+
+3. Événements à écouter:
+- `checkout.session.completed`
+- `payment_intent.succeeded`
+4. Copier le signing secret `whsec_...` dans `STRIPE_WEBHOOK_SECRET` sur Render.
+5. Redeploy backend.
+
+Notes utiles:
+
+- `GET /api/payments/webhook/` renvoie **405**: c'est normal (endpoint POST uniquement).
+- Si une commande reste `pending`, vérifier les livraisons webhook dans Stripe.
+
+---
+
+## 5) CORS / Auth - erreurs fréquentes
+
+### `Failed to fetch` / CORS
+
+Vérifier:
+
+- `CORS_ALLOWED_ORIGINS` contient l'URL Vercel exacte (sans slash final).
+- `NEXT_PUBLIC_API_BASE_URL` pointe vers Render (pas `127.0.0.1`).
+- Redeploy Render + Vercel après modification.
+
+### `token_not_valid` / session expirée
+
+- Supprimer `accessToken` du Local Storage.
+- Se reconnecter.
+- Vérifier que le compte existe bien en prod.
+
+---
+
+## 6) Checklist finale (go live)
+
+- [ ] Backend Render OK (`/api/catalog/categories/` = 200)
+- [ ] Frontend Vercel OK
+- [ ] Signup / Signin OK depuis Vercel
+- [ ] Admin prod accessible (`/admin/`)
+- [ ] Catégories / produits créés en prod
+- [ ] Panier / checkout Stripe OK
+- [ ] Webhook Stripe livré en 200
+- [ ] Commandes passent de `pending` à `paid`
+
+---
+
+## 7) Viabilité long terme
+
+Cette config est viable long terme pour MVP / petite à moyenne charge:
+
+- Vercel (frontend) + Render (backend + DB) + Stripe est une stack robuste.
+- Améliorations recommandées ensuite:
+  - monitoring (Sentry, alerting)
+  - backups DB automatisés
+  - environnement staging
+  - rotation régulière des clés secrètes
+  - Redis dédié si charge croissante

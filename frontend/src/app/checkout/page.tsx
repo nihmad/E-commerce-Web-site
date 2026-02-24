@@ -43,22 +43,24 @@ export default function CheckoutPage() {
 
   if (cart.length === 0) {
     return (
-      <main className="min-h-screen bg-gray-50 p-8">
-        <h1 className="text-2xl font-bold mb-4">Paiement</h1>
+      <main className="page-shell">
+        <section className="page-container max-w-2xl">
+        <h1 className="section-title mb-4">Paiement</h1>
         <p className="text-gray-500 mb-4">Votre panier est vide.</p>
         <Link href="/" className="text-blue-600 hover:underline">
           Retour à la boutique
         </Link>
+        </section>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <section className="max-w-2xl mx-auto py-10 px-4">
-        <h1 className="text-2xl font-bold mb-6">Récapitulatif de commande</h1>
+    <main className="page-shell">
+      <section className="page-container max-w-2xl">
+        <h1 className="section-title mb-6">Récapitulatif de commande</h1>
 
-        <div className="bg-white rounded-lg shadow p-6 space-y-4">
+        <div className="surface-card p-6 space-y-4">
           {cart.map((item) => (
             <div
               key={item.productId}
@@ -84,12 +86,12 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        {error && <p className="text-red-600 text-sm mt-4">{error}</p>}
+        {error && <p className="text-red-600 text-sm mt-4 bg-red-50 border border-red-100 rounded p-3">{error}</p>}
 
         <button
           onClick={handleCheckout}
           disabled={loading}
-          className="mt-6 w-full bg-blue-600 text-white py-3 rounded text-base font-medium hover:bg-blue-700 disabled:opacity-60"
+          className="mt-6 w-full btn-primary py-3 text-base disabled:opacity-60"
         >
           {loading ? "Redirection vers Stripe..." : "Payer avec Stripe"}
         </button>

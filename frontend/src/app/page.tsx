@@ -27,10 +27,20 @@ export default async function HomePage() {
   const categories = await fetchCategories();
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <section className="max-w-4xl mx-auto py-10 px-4">
-        <h1 className="text-3xl font-bold mb-4">Bienvenue sur la boutique</h1>
-        <p className="text-gray-600 mb-8">
+    <main className="page-shell">
+      <section className="page-container">
+        <div className="surface-card p-8 mb-8 bg-gradient-to-br from-blue-50 to-indigo-50">
+          <p className="text-sm text-blue-700 font-semibold uppercase tracking-wide mb-2">
+            Boutique e-commerce
+          </p>
+          <h1 className="section-title mb-2">Bienvenue sur la boutique</h1>
+          <p className="section-subtitle">
+            Choisis une catégorie pour découvrir les produits.
+          </p>
+        </div>
+
+        <h2 className="text-xl font-semibold mb-4">Catégories</h2>
+        <p className="text-sm text-slate-500 mb-6">
           Choisis une catégorie pour découvrir les produits.
         </p>
 
@@ -39,13 +49,16 @@ export default async function HomePage() {
             <Link
               key={cat.id}
               href={`/category/${cat.slug}`}
-              className="block border rounded-lg bg-white p-4 shadow-sm hover:shadow-md transition"
+              className="surface-card block p-5 hover:shadow-md hover:-translate-y-0.5 transition"
             >
-              <h2 className="text-lg font-semibold">{cat.name}</h2>
+              <h3 className="text-lg font-semibold">{cat.name}</h3>
+              <p className="text-sm text-slate-500 mt-1">Voir les produits</p>
             </Link>
           ))}
           {categories.length === 0 && (
-            <p className="text-gray-500">Aucune catégorie pour le moment.</p>
+            <div className="surface-card p-5 text-slate-500">
+              Aucune catégorie pour le moment.
+            </div>
           )}
         </div>
       </section>

@@ -80,8 +80,8 @@ export default function ProductDetailPage({
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <section className="max-w-3xl mx-auto py-10 px-4">
+    <main className="page-shell">
+      <section className="page-container max-w-3xl">
         {product.category && (
           <Link
             href={`/category/${product.category.slug}`}
@@ -91,7 +91,7 @@ export default function ProductDetailPage({
           </Link>
         )}
 
-        <div className="mt-4 bg-white rounded-lg shadow p-6">
+        <div className="mt-4 surface-card p-6">
           {product.image_url && (
             <img
               src={product.image_url}
@@ -110,7 +110,7 @@ export default function ProductDetailPage({
             <button
               onClick={handleAddToCart}
               disabled={product.stock === 0}
-              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary px-6 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {product.stock === 0 ? "Rupture de stock" : "Ajouter au panier"}
             </button>

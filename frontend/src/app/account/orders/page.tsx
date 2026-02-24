@@ -44,12 +44,12 @@ export default function MyOrdersPage() {
     load();
   }, []);
 
-  if (loading) return <main className="p-8">Chargement...</main>;
+  if (loading) return <main className="page-shell page-container">Chargement...</main>;
 
   if (error) {
     return (
-      <main className="p-8">
-        <p className="text-red-600">{error}</p>
+      <main className="page-shell page-container max-w-xl">
+        <p className="text-red-600 bg-red-50 border border-red-100 rounded p-3 mb-3">{error}</p>
         <Link href="/auth/signin" className="text-blue-600 underline">
           Se connecter
         </Link>
@@ -58,15 +58,15 @@ export default function MyOrdersPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <section className="max-w-3xl mx-auto py-10 px-4">
+    <main className="page-shell">
+      <section className="page-container max-w-3xl">
         <Link
           href="/account"
           className="text-blue-600 text-sm hover:underline"
         >
           &larr; Mon compte
         </Link>
-        <h1 className="text-2xl font-bold mt-4 mb-6">Mes commandes</h1>
+        <h1 className="section-title mt-4 mb-6">Mes commandes</h1>
 
         {orders.length === 0 ? (
           <p className="text-gray-500">Aucune commande pour le moment.</p>
@@ -76,7 +76,7 @@ export default function MyOrdersPage() {
               <Link
                 key={order.id}
                 href={`/account/orders/${order.id}`}
-                className="block bg-white rounded-lg shadow p-4 hover:shadow-md transition cursor-pointer"
+                className="surface-card block p-5 hover:shadow-md transition cursor-pointer"
               >
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-semibold">

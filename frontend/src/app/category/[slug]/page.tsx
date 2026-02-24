@@ -40,13 +40,13 @@ export default async function CategoryPage({ params }: Props) {
       : decodeURIComponent(slug);
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <section className="max-w-5xl mx-auto py-10 px-4">
+    <main className="page-shell">
+      <section className="page-container">
         <Link href="/" className="text-blue-600 text-sm hover:underline">
           &larr; Retour aux catégories
         </Link>
 
-        <h1 className="text-3xl font-bold mt-4 mb-6">{categoryName}</h1>
+        <h1 className="section-title mt-4 mb-6">{categoryName}</h1>
 
         {products.length === 0 ? (
           <p className="text-gray-500">
@@ -58,7 +58,7 @@ export default async function CategoryPage({ params }: Props) {
               <Link
                 key={product.id}
                 href={`/product/${product.slug}`}
-                className="block border rounded-lg bg-white overflow-hidden shadow-sm hover:shadow-md transition"
+                className="surface-card block overflow-hidden hover:shadow-md transition"
               >
                 {product.image_url && (
                   <img
