@@ -32,10 +32,12 @@ export default function CheckoutPage() {
         clearCart();
         window.location.href = data.checkout_url;
       }
-    } catch (err: any) {
-      setError(
-        err.message || "Erreur lors de la création de la session de paiement."
-      );
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Erreur lors de la creation de la session de paiement.";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -45,11 +47,11 @@ export default function CheckoutPage() {
     return (
       <main className="page-shell">
         <section className="page-container max-w-2xl">
-        <h1 className="section-title mb-4">Paiement</h1>
-        <p className="text-gray-500 mb-4">Votre panier est vide.</p>
-        <Link href="/" className="text-blue-600 hover:underline">
-          Retour à la boutique
-        </Link>
+          <h1 className="section-title-serif text-3xl mb-4">Paiement</h1>
+          <p className="text-gray-500 mb-4">Votre panier est vide.</p>
+          <Link href="/" className="text-[#8d6a34] hover:underline">
+            Retour a la boutique
+          </Link>
         </section>
       </main>
     );
@@ -58,9 +60,9 @@ export default function CheckoutPage() {
   return (
     <main className="page-shell">
       <section className="page-container max-w-2xl">
-        <h1 className="section-title mb-6">Récapitulatif de commande</h1>
+        <h1 className="section-title-serif text-3xl mb-6">Recapitulatif de commande</h1>
 
-        <div className="surface-card p-6 space-y-4">
+        <div className="surface-card-luxury p-6 space-y-4">
           {cart.map((item) => (
             <div
               key={item.productId}
@@ -69,19 +71,19 @@ export default function CheckoutPage() {
               <div>
                 <p className="font-medium">{item.name}</p>
                 <p className="text-sm text-gray-500">
-                  {item.quantity} x {item.price} &euro;
+                  {item.quantity} x {item.price} EUR
                 </p>
               </div>
-              <p className="font-bold">
-                {(parseFloat(item.price) * item.quantity).toFixed(2)} &euro;
+              <p className="font-semibold text-[#9a7b49]">
+                {(parseFloat(item.price) * item.quantity).toFixed(2)} EUR
               </p>
             </div>
           ))}
 
           <div className="flex justify-between items-center pt-2">
             <p className="text-lg font-bold">Total</p>
-            <p className="text-lg font-bold text-green-700">
-              {total.toFixed(2)} &euro;
+            <p className="text-lg font-semibold text-[#9a7b49]">
+              {total.toFixed(2)} EUR
             </p>
           </div>
         </div>
@@ -91,7 +93,7 @@ export default function CheckoutPage() {
         <button
           onClick={handleCheckout}
           disabled={loading}
-          className="mt-6 w-full btn-primary py-3 text-base disabled:opacity-60"
+          className="mt-6 w-full btn-gold py-3 text-base disabled:opacity-60"
         >
           {loading ? "Redirection vers Stripe..." : "Payer avec Stripe"}
         </button>

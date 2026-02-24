@@ -6,8 +6,14 @@ import { getCart } from "@/lib/cart";
 import { setAccessToken } from "@/lib/api";
 
 export default function Navbar() {
-  const [cartCount, setCartCount] = useState(0);
-  const [token, setToken] = useState<string | null>(null);
+  const [cartCount, setCartCount] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    return getCart().reduce((sum, item) => sum + item.quantity, 0);
+  });
+  const [token, setToken] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return window.localStorage.getItem("accessToken");
+  });
 
   function updateCartCount() {
     const cart = getCart();
@@ -19,8 +25,6 @@ export default function Navbar() {
   }
 
   useEffect(() => {
-    updateCartCount();
-    refreshToken();
     window.addEventListener("cart-updated", updateCartCount);
     window.addEventListener("auth-updated", refreshToken);
     return () => {
@@ -36,44 +40,44 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 backdrop-blur">
+    <nav className="sticky top-0 z-50 border-b border-[#2f2a25] bg-[#13110f]/95 backdrop-blur">
       <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="text-xl font-bold text-blue-600 tracking-tight">
+        <Link href="/" className="text-xl font-semibold text-[#e7c38a] tracking-wide">
           Boutique
         </Link>
 
-        <div className="flex items-center gap-6 text-sm font-medium">
-          <Link href="/" className="hover:text-blue-600 transition-colors">
+        <div className="flex items-center gap-6 text-sm font-medium text-[#f2ece4]">
+          <Link href="/" className="hover:text-[#e7c38a] transition-colors">
             Accueil
           </Link>
-          <Link href="/cart" className="hover:text-blue-600 relative transition-colors">
+          <Link href="/cart" className="hover:text-[#e7c38a] relative transition-colors">
             Panier
             {cartCount > 0 && (
-              <span className="ml-2 inline-flex items-center justify-center min-w-5 h-5 px-1 text-xs font-bold text-white bg-red-500 rounded-full">
+              <span className="ml-2 inline-flex items-center justify-center min-w-5 h-5 px-1 text-xs font-bold text-[#1b140d] bg-[#e7c38a] rounded-full">
                 {cartCount}
               </span>
             )}
           </Link>
           {token ? (
             <>
-              <Link href="/account" className="hover:text-blue-600 transition-colors">
+              <Link href="/account" className="hover:text-[#e7c38a] transition-colors">
                 Mon compte
               </Link>
               <button
                 onClick={handleLogout}
-                className="text-red-500 hover:text-red-700 transition-colors"
+                className="text-[#ef9f9f] hover:text-[#ffd1d1] transition-colors"
               >
                 Déconnexion
               </button>
             </>
           ) : (
             <>
-              <Link href="/auth/signin" className="hover:text-blue-600 transition-colors">
+              <Link href="/auth/signin" className="hover:text-[#e7c38a] transition-colors">
                 Connexion
               </Link>
               <Link
                 href="/auth/signup"
-                className="btn-primary py-1.5"
+                className="btn-gold py-1.5"
               >
                 Inscription
               </Link>

@@ -12,14 +12,16 @@ import {
 } from "@/lib/cart";
 
 export default function CartPage() {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    if (typeof window === "undefined") return [];
+    return getCart();
+  });
 
   function reload() {
     setCart(getCart());
   }
 
   useEffect(() => {
-    reload();
     window.addEventListener("cart-updated", reload);
     return () => window.removeEventListener("cart-updated", reload);
   }, []);
@@ -30,11 +32,11 @@ export default function CartPage() {
     return (
       <main className="page-shell">
         <section className="page-container max-w-3xl">
-        <h1 className="section-title mb-4">Mon panier</h1>
-        <p className="text-gray-500 mb-4">Votre panier est vide.</p>
-        <Link href="/" className="text-blue-600 hover:underline">
-          Parcourir les catégories
-        </Link>
+          <h1 className="section-title-serif text-3xl mb-4">Mon panier</h1>
+          <p className="text-gray-500 mb-4">Votre panier est vide.</p>
+          <Link href="/" className="text-[#8d6a34] hover:underline">
+            Parcourir les categories
+          </Link>
         </section>
       </main>
     );
@@ -43,13 +45,13 @@ export default function CartPage() {
   return (
     <main className="page-shell">
       <section className="page-container max-w-3xl">
-        <h1 className="section-title mb-6">Mon panier</h1>
+        <h1 className="section-title-serif text-3xl mb-6">Mon panier</h1>
 
         <div className="space-y-4">
           {cart.map((item) => (
             <div
               key={item.productId}
-              className="surface-card flex items-center gap-4 p-4"
+              className="surface-card-luxury flex items-center gap-4 p-4"
             >
               {item.image_url && (
                 <img
@@ -65,7 +67,7 @@ export default function CartPage() {
                 >
                   {item.name}
                 </Link>
-                <p className="text-green-700 font-bold">{item.price} &euro;</p>
+                <p className="text-[#9a7b49] font-semibold">{item.price} EUR</p>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -105,11 +107,11 @@ export default function CartPage() {
           </button>
           <div className="text-right">
             <p className="text-xl font-bold">
-              Total : {total.toFixed(2)} &euro;
+              Total : {total.toFixed(2)} EUR
             </p>
             <Link
               href="/checkout"
-              className="inline-block mt-3 btn-primary"
+              className="inline-block mt-3 btn-gold"
             >
               Passer au paiement
             </Link>
