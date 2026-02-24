@@ -73,9 +73,10 @@ export default function MyOrdersPage() {
         ) : (
           <div className="space-y-4">
             {orders.map((order) => (
-              <div
+              <Link
                 key={order.id}
-                className="bg-white rounded-lg shadow p-4"
+                href={`/account/orders/${order.id}`}
+                className="block bg-white rounded-lg shadow p-4 hover:shadow-md transition cursor-pointer"
               >
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-semibold">
@@ -111,7 +112,7 @@ export default function MyOrdersPage() {
                 <p className="font-bold text-right">
                   Total : {order.total_amount} &euro;
                 </p>
-              </div>
+              </Link>
             ))}
           </div>
         )}
