@@ -10,7 +10,7 @@ from apps.catalog.models import Product
 from apps.orders.models import Order, OrderItem
 from .models import Payment
 
-FRONTEND_URL = "http://localhost:3000"
+FRONTEND_URL = settings.FRONTEND_URL
 
 
 class CreateCheckoutSessionView(APIView):
