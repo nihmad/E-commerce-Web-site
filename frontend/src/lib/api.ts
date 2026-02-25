@@ -35,6 +35,12 @@ function toFrenchMessage(raw: string): string {
   if (lower.includes("given token not valid for any token type")) {
     return "Session expirée. Veuillez vous reconnecter.";
   }
+  if (lower.includes("authentication credentials were not provided")) {
+    return "Veuillez vous connecter pour continuer.";
+  }
+  if (lower.includes("informations d'authentification non fournies")) {
+    return "Veuillez vous connecter pour continuer.";
+  }
   if (lower.includes("a user with that email already exists")) {
     return "Un compte existe déjà avec cet email.";
   }

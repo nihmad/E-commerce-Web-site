@@ -36,8 +36,9 @@ export default function CheckoutPage() {
       }
     } catch (err: unknown) {
       if (err instanceof ApiError) {
-        setError(err.message);
-        setRequiresSignin(err.status === 401);
+        const needsSignin = err.status === 401;
+        setRequiresSignin(needsSignin);
+        setError(needsSignin ? "Veuillez vous connecter pour continuer." : err.message);
       } else if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -94,14 +95,24 @@ export default function CheckoutPage() {
         </div>
 
         {error && (
-          <div className="mt-4 space-y-3">
-            <p className="text-red-600 text-sm bg-red-50 border border-red-100 rounded p-3">
-              {error}
-            </p>
-            {requiresSignin && (
-              <Link href="/auth/signin" className="btn-primary inline-block">
-                Se connecter pour continuer
-              </Link>
+          <div className="mt-4">
+            {requiresSignin ? (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                <p className="text-sm font-semibold text-amber-900">
+                  Connexion requise
+                </p>
+                <p className="text-sm text-amber-800 mt-1">{error}</p>
+                <Link href="/auth/signin" className="btn-primary inline-block mt-3">
+                  Se connecter pour continuer
+                </Link>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                <p className="text-sm font-semibold text-red-900">
+                  Paiement indisponible
+                </p>
+                <p className="text-sm text-red-700 mt-1">{error}</p>
+              </div>
             )}
           </div>
         )}
