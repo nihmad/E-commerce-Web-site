@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { apiFetch, setAccessToken } from "@/lib/api";
+import { ApiError, apiFetch, setAccessToken } from "@/lib/api";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -22,8 +22,12 @@ export default function SignInPage() {
         setAccessToken(data.access);
       }
       window.location.href = "/account";
-    } catch (err: any) {
-      setError(err.message || "Erreur de connexion");
+    } catch (err: unknown) {
+      if (err instanceof ApiError || err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Erreur de connexion");
+      }
     } finally {
       setLoading(false);
     }

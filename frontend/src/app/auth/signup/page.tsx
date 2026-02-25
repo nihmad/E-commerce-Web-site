@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { apiFetch, setAccessToken } from "@/lib/api";
+import { ApiError, apiFetch, setAccessToken } from "@/lib/api";
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("");
@@ -23,8 +23,12 @@ export default function SignUpPage() {
         setAccessToken(data.access);
       }
       window.location.href = "/account";
-    } catch (err: any) {
-      setError(err.message || "Erreur lors de l'inscription");
+    } catch (err: unknown) {
+      if (err instanceof ApiError || err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Erreur lors de l'inscription");
+      }
     } finally {
       setLoading(false);
     }
