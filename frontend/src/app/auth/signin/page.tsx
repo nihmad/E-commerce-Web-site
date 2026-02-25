@@ -19,6 +19,10 @@ function firstMessage(value: unknown): string | null {
   return null;
 }
 
+function hasAnyFieldError(errors: SigninFieldErrors): boolean {
+  return Boolean(errors.email || errors.password);
+}
+
 export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -43,15 +47,20 @@ export default function SignInPage() {
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         const details = err.details;
+        let nextFieldErrors: SigninFieldErrors = {};
         if (details && typeof details === "object" && !Array.isArray(details)) {
           const record = details as Record<string, unknown>;
-          const nextFieldErrors: SigninFieldErrors = {
+          nextFieldErrors = {
             email: firstMessage(record.email) || undefined,
             password: firstMessage(record.password) || undefined,
           };
           setFieldErrors(nextFieldErrors);
+          const nonFieldMessage =
+            firstMessage(record.non_field_errors) || firstMessage(record.detail);
+          setError(hasAnyFieldError(nextFieldErrors) ? nonFieldMessage : err.message);
+        } else {
+          setError(err.message);
         }
-        setError(err.message);
       } else if (err instanceof Error) {
         setError(err.message);
       } else {

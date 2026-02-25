@@ -20,6 +20,10 @@ function firstMessage(value: unknown): string | null {
   return null;
 }
 
+function hasAnyFieldError(errors: SignupFieldErrors): boolean {
+  return Boolean(errors.email || errors.username || errors.password);
+}
+
 export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -45,16 +49,22 @@ export default function SignUpPage() {
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         const details = err.details;
+        let nextFieldErrors: SignupFieldErrors = {};
         if (details && typeof details === "object" && !Array.isArray(details)) {
           const record = details as Record<string, unknown>;
-          const nextFieldErrors: SignupFieldErrors = {
+          nextFieldErrors = {
             email: firstMessage(record.email) || undefined,
             username: firstMessage(record.username) || undefined,
             password: firstMessage(record.password) || undefined,
           };
           setFieldErrors(nextFieldErrors);
+
+          const nonFieldMessage =
+            firstMessage(record.non_field_errors) || firstMessage(record.detail);
+          setError(hasAnyFieldError(nextFieldErrors) ? nonFieldMessage : err.message);
+        } else {
+          setError(err.message);
         }
-        setError(err.message);
       } else if (err instanceof Error) {
         setError(err.message);
       } else {
