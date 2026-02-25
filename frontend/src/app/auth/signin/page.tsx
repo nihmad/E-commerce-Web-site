@@ -3,15 +3,33 @@
 import { FormEvent, useState } from "react";
 import { ApiError, apiFetch, setAccessToken } from "@/lib/api";
 
+type SigninFieldErrors = {
+  email?: string;
+  password?: string;
+};
+
+function firstMessage(value: unknown): string | null {
+  if (typeof value === "string" && value.trim()) return value;
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      const msg = firstMessage(entry);
+      if (msg) return msg;
+    }
+  }
+  return null;
+}
+
 export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<SigninFieldErrors>({});
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
     setLoading(true);
     try {
       const data = await apiFetch("/api/auth/token/", {
@@ -23,7 +41,18 @@ export default function SignInPage() {
       }
       window.location.href = "/account";
     } catch (err: unknown) {
-      if (err instanceof ApiError || err instanceof Error) {
+      if (err instanceof ApiError) {
+        const details = err.details;
+        if (details && typeof details === "object" && !Array.isArray(details)) {
+          const record = details as Record<string, unknown>;
+          const nextFieldErrors: SigninFieldErrors = {
+            email: firstMessage(record.email) || undefined,
+            password: firstMessage(record.password) || undefined,
+          };
+          setFieldErrors(nextFieldErrors);
+        }
+        setError(err.message);
+      } else if (err instanceof Error) {
         setError(err.message);
       } else {
         setError("Erreur de connexion");
@@ -50,9 +79,15 @@ export default function SignInPage() {
             type="email"
             className="input-field text-sm"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setFieldErrors((prev) => ({ ...prev, email: undefined }));
+            }}
             required
           />
+          {fieldErrors.email && (
+            <p className="text-red-600 text-xs mt-1">{fieldErrors.email}</p>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Mot de passe</label>
@@ -60,9 +95,15 @@ export default function SignInPage() {
             type="password"
             className="input-field text-sm"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setFieldErrors((prev) => ({ ...prev, password: undefined }));
+            }}
             required
           />
+          {fieldErrors.password && (
+            <p className="text-red-600 text-xs mt-1">{fieldErrors.password}</p>
+          )}
         </div>
         <button
           type="submit"

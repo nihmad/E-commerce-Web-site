@@ -27,6 +27,9 @@ export default function CartPage() {
   }, []);
 
   const total = cartTotal(cart);
+  const stockLimitedProducts = cart
+    .filter((item) => item.quantity >= item.stock)
+    .map((item) => item.name);
 
   if (cart.length === 0) {
     return (
@@ -99,9 +102,9 @@ export default function CartPage() {
           ))}
         </div>
 
-        {cart.some((item) => item.quantity >= item.stock) && (
+        {stockLimitedProducts.length > 0 && (
           <p className="text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded p-3 mt-4">
-            Certaines quantites ont atteint le stock maximum disponible.
+            Limite de stock atteinte pour : {stockLimitedProducts.join(", ")}.
           </p>
         )}
 
