@@ -5,9 +5,16 @@ from .serializers import CategorySerializer, ProductSerializer
 
 
 class CategoryListView(generics.ListAPIView):
-    queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        # Affiche uniquement les categories qui contiennent au moins un produit actif.
+        return (
+            Category.objects.filter(products__is_active=True)
+            .distinct()
+            .order_by("name")
+        )
 
 
 class ProductListView(generics.ListAPIView):
