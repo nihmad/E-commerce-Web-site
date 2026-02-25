@@ -27,3 +27,6 @@ frontend/.vercel/
 # Build & cache
 *.tsbuildinfo
 next-env.d.ts
+
+data/
+frontend/public/catalog/
