@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { apiFetch } from "@/lib/api";
+import { ApiError, apiFetch } from "@/lib/api";
 
 type OrderItem = {
   id: number;
@@ -13,6 +13,7 @@ type OrderItem = {
 
 type Order = {
   id: number;
+  user_order_number: number;
   status: string;
   total_amount: string;
   created_at: string;
@@ -20,8 +21,12 @@ type Order = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  pending: "En attente",
-  paid: "Payée",
+  pending: "En attente de paiement",
+  paid: "Paiement confirme",
+  processing: "En cours de traitement",
+  shipped: "Expediee",
+  out_for_delivery: "En cours de livraison",
+  delivered: "Livree",
   cancelled: "Annulée",
 };
 
@@ -35,8 +40,12 @@ export default function MyOrdersPage() {
       try {
         const data = await apiFetch("/api/orders/my-orders/");
         setOrders(data);
-      } catch (err: any) {
-        setError(err.message || "Impossible de charger vos commandes.");
+      } catch (err: unknown) {
+        if (err instanceof ApiError || err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Impossible de charger vos commandes.");
+        }
       } finally {
         setLoading(false);
       }
@@ -80,15 +89,17 @@ export default function MyOrdersPage() {
               >
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-semibold">
-                    Commande #{order.id}
+                    Commande client #{order.user_order_number}
                   </span>
                   <span
                     className={`text-sm font-medium px-2 py-1 rounded ${
-                      order.status === "paid"
+                      order.status === "delivered"
                         ? "bg-green-100 text-green-700"
                         : order.status === "cancelled"
                           ? "bg-red-100 text-red-700"
-                          : "bg-yellow-100 text-yellow-700"
+                          : order.status === "shipped" || order.status === "out_for_delivery"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-yellow-100 text-yellow-700"
                     }`}
                   >
                     {STATUS_LABELS[order.status] || order.status}

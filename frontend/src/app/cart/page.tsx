@@ -83,6 +83,7 @@ export default function CartPage() {
                   onClick={() =>
                     updateQuantity(item.productId, item.quantity + 1)
                   }
+                  disabled={item.quantity >= item.stock}
                   className="w-8 h-8 rounded border text-lg leading-none hover:bg-gray-100"
                 >
                   +
@@ -97,6 +98,12 @@ export default function CartPage() {
             </div>
           ))}
         </div>
+
+        {cart.some((item) => item.quantity >= item.stock) && (
+          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded p-3 mt-4">
+            Certaines quantites ont atteint le stock maximum disponible.
+          </p>
+        )}
 
         <div className="mt-8 flex items-center justify-between">
           <button

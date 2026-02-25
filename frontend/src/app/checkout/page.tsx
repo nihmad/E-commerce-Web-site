@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { apiFetch } from "@/lib/api";
+import { ApiError, apiFetch } from "@/lib/api";
 import { getCart, clearCart, cartTotal, CartItem } from "@/lib/cart";
 
 export default function CheckoutPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [requiresSignin, setRequiresSignin] = useState(false);
 
   useEffect(() => {
     setCart(getCart());
@@ -18,6 +19,7 @@ export default function CheckoutPage() {
 
   async function handleCheckout() {
     setError(null);
+    setRequiresSignin(false);
     setLoading(true);
     try {
       const items = cart.map((c) => ({
@@ -33,11 +35,14 @@ export default function CheckoutPage() {
         window.location.href = data.checkout_url;
       }
     } catch (err: unknown) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Erreur lors de la creation de la session de paiement.";
-      setError(message);
+      if (err instanceof ApiError) {
+        setError(err.message);
+        setRequiresSignin(err.status === 401);
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Erreur lors de la creation de la session de paiement.");
+      }
     } finally {
       setLoading(false);
     }
@@ -88,7 +93,18 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        {error && <p className="text-red-600 text-sm mt-4 bg-red-50 border border-red-100 rounded p-3">{error}</p>}
+        {error && (
+          <div className="mt-4 space-y-3">
+            <p className="text-red-600 text-sm bg-red-50 border border-red-100 rounded p-3">
+              {error}
+            </p>
+            {requiresSignin && (
+              <Link href="/auth/signin" className="btn-primary inline-block">
+                Se connecter pour continuer
+              </Link>
+            )}
+          </div>
+        )}
 
         <button
           onClick={handleCheckout}

@@ -4,6 +4,7 @@ export type CartItem = {
   price: string;
   image_url: string;
   slug: string;
+  stock: number;
   quantity: number;
 };
 
@@ -14,7 +15,12 @@ export function getCart(): CartItem[] {
   const raw = window.localStorage.getItem(CART_KEY);
   if (!raw) return [];
   try {
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((item) => ({
+      ...item,
+      stock: typeof item.stock === "number" ? item.stock : 999,
+    }));
   } catch {
     return [];
   }
@@ -28,12 +34,14 @@ function saveCart(cart: CartItem[]) {
 export function addToCart(item: Omit<CartItem, "quantity">, qty = 1) {
   const cart = getCart();
   const existing = cart.find((c) => c.productId === item.productId);
+  const maxStock = Math.max(0, item.stock);
   if (existing) {
-    existing.quantity += qty;
+    existing.stock = item.stock;
+    existing.quantity = Math.min(existing.quantity + qty, maxStock);
   } else {
-    cart.push({ ...item, quantity: qty });
+    cart.push({ ...item, quantity: Math.min(Math.max(qty, 1), maxStock) });
   }
-  saveCart(cart);
+  saveCart(cart.filter((line) => line.quantity > 0));
 }
 
 export function updateQuantity(productId: number, quantity: number) {
@@ -42,9 +50,9 @@ export function updateQuantity(productId: number, quantity: number) {
     cart = cart.filter((c) => c.productId !== productId);
   } else {
     const item = cart.find((c) => c.productId === productId);
-    if (item) item.quantity = quantity;
+    if (item) item.quantity = Math.min(quantity, Math.max(0, item.stock));
   }
-  saveCart(cart);
+  saveCart(cart.filter((line) => line.quantity > 0));
 }
 
 export function removeFromCart(productId: number) {

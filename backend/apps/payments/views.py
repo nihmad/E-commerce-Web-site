@@ -2,6 +2,8 @@ from decimal import Decimal
 
 import stripe
 from django.conf import settings
+from django.db import transaction
+from django.db.models import F
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -34,6 +36,7 @@ class CreateCheckoutSessionView(APIView):
         order = Order.objects.create(user=request.user)
         line_items = []
         total = Decimal("0.00")
+        stock_errors = []
 
         for item in items:
             product_id = item.get("product_id")
@@ -43,6 +46,11 @@ class CreateCheckoutSessionView(APIView):
             try:
                 product = Product.objects.get(pk=product_id, is_active=True)
             except Product.DoesNotExist:
+                continue
+            if quantity > product.stock:
+                stock_errors.append(
+                    f"{product.name}: stock disponible {product.stock}, demandé {quantity}."
+                )
                 continue
 
             OrderItem.objects.create(
@@ -66,6 +74,14 @@ class CreateCheckoutSessionView(APIView):
 
         if not line_items:
             order.delete()
+            if stock_errors:
+                return Response(
+                    {
+                        "detail": "Stock insuffisant pour certains articles.",
+                        "stock_errors": stock_errors,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             return Response(
                 {"detail": "Panier invalide."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -133,10 +149,44 @@ class StripeWebhookView(APIView):
 
             if order_id:
                 try:
-                    order = Order.objects.get(pk=order_id)
-                    order.status = "paid"
-                    order.stripe_payment_intent = payment_intent_id or order.stripe_payment_intent
-                    order.save(update_fields=["status", "stripe_payment_intent"])
+                    with transaction.atomic():
+                        order = Order.objects.select_for_update().get(pk=order_id)
+                        if order.status in {
+                            "paid",
+                            "processing",
+                            "shipped",
+                            "out_for_delivery",
+                            "delivered",
+                        }:
+                            return Response(status=status.HTTP_200_OK)
+
+                        stock_unavailable = []
+                        for item in order.items.select_related("product"):
+                            updated = Product.objects.filter(
+                                pk=item.product_id, stock__gte=item.quantity
+                            ).update(stock=F("stock") - item.quantity)
+                            if not updated:
+                                current_stock = Product.objects.get(pk=item.product_id).stock
+                                stock_unavailable.append(
+                                    f"{item.product.name}: stock disponible {current_stock}, demandé {item.quantity}."
+                                )
+
+                        if stock_unavailable:
+                            order.status = "cancelled"
+                            order.save(update_fields=["status"])
+                            return Response(
+                                {
+                                    "detail": "Commande annulée: stock insuffisant.",
+                                    "stock_errors": stock_unavailable,
+                                },
+                                status=status.HTTP_200_OK,
+                            )
+
+                        order.status = "processing"
+                        order.stripe_payment_intent = (
+                            payment_intent_id or order.stripe_payment_intent
+                        )
+                        order.save(update_fields=["status", "stripe_payment_intent"])
 
                     Payment.objects.update_or_create(
                         order=order,
@@ -154,8 +204,8 @@ class StripeWebhookView(APIView):
             try:
                 payment = Payment.objects.get(stripe_payment_intent=payment_intent_id)
                 order = payment.order
-                if order.status != "paid":
-                    order.status = "paid"
+                if order.status == "pending":
+                    order.status = "processing"
                     order.save(update_fields=["status"])
             except Payment.DoesNotExist:
                 pass

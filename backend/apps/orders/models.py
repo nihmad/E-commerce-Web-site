@@ -6,8 +6,12 @@ from apps.catalog.models import Product
 
 class Order(models.Model):
     STATUS_CHOICES = [
-        ("pending", "En attente"),
-        ("paid", "Payée"),
+        ("pending", "En attente de paiement"),
+        ("paid", "Payée (legacy)"),
+        ("processing", "En cours de traitement"),
+        ("shipped", "Expédiée"),
+        ("out_for_delivery", "En cours de livraison"),
+        ("delivered", "Livrée"),
         ("cancelled", "Annulée"),
     ]
 
@@ -32,4 +36,44 @@ class OrderItem(models.Model):
 
     def __str__(self) -> str:
         return f"{self.product} x {self.quantity}"
+
+
+class SupportTicket(models.Model):
+    STATUS_CHOICES = [
+        ("open", "Ouvert"),
+        ("in_progress", "En cours"),
+        ("resolved", "Résolu"),
+    ]
+
+    order = models.ForeignKey(Order, related_name="support_tickets", on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, related_name="support_tickets", on_delete=models.CASCADE
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="open")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["order", "user"], name="unique_ticket_per_order_user")
+        ]
+
+    def __str__(self) -> str:
+        return f"SAV commande #{self.order_id} - {self.user}"
+
+
+class SupportMessage(models.Model):
+    ticket = models.ForeignKey(SupportTicket, related_name="messages", on_delete=models.CASCADE)
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL, related_name="support_messages", on_delete=models.CASCADE
+    )
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self) -> str:
+        return f"Message ticket #{self.ticket_id} par {self.sender}"
 

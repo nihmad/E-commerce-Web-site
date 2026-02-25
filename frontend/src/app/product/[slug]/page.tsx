@@ -74,6 +74,7 @@ export default function ProductDetailPage({
       price: product.price,
       image_url: product.image_url,
       slug: product.slug,
+      stock: product.stock,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
