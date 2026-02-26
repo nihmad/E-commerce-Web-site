@@ -137,3 +137,41 @@ Cette config est viable long terme pour MVP / petite à moyenne charge:
   - environnement staging
   - rotation régulière des clés secrètes
   - Redis dédié si charge croissante
+
+---
+
+## 8) Import catalogue sans Render Shell (plan Free)
+
+Si ton plan Render ne permet pas d'ouvrir un shell, tu peux executer les commandes Django depuis ton PC, en pointant vers la DB Render.
+
+### 8.1 Configurer `backend/.env` localement
+
+Ajouter (ou mettre a jour) :
+
+```env
+DATABASE_URL=postgresql://...external-render-url...
+```
+
+### 8.2 Lancer les commandes depuis ton PC
+
+```bash
+cd backend
+.venv\Scripts\activate
+python manage.py migrate
+python manage.py import_kaggle_fashion --csv-path "D:\E-commerce-Web-site\data\fashion\styles.csv" --images-dir "D:\E-commerce-Web-site\data\fashion\images" --limit 300
+python manage.py curate_catalog --keep-categories "Hauts,Bas,Chaussures,Sacs,Montres,Bijoux" --max-per-category 80
+```
+
+### 8.3 Verifier en production
+
+- `https://<backend-render>/api/catalog/categories/`
+- `https://<backend-render>/api/catalog/products/`
+
+---
+
+## 9) Bonnes pratiques images produit
+
+- Le dataset "Fashion Product Images (Small)" contient des miniatures (qualite parfois faible).
+- Eviter de pousser des dizaines de milliers d'images dans Git.
+- Pour la production long terme, preferer un stockage d'images dedie (Cloudinary / S3).
+- Si des images manquent sur le front, verifier d'abord `image_url` via l'API backend.
