@@ -158,9 +158,9 @@ export default async function HomePage() {
           </div>
         </div>
 
-        <div className="surface-card mt-12 p-7 sm:p-8 bg-gradient-to-r from-[#16130f] to-[#24201b] text-white">
+        <div className="mt-12 p-7 sm:p-8 rounded-xl border border-[#2b2723] shadow-sm bg-gradient-to-r from-[#16130f] to-[#24201b] text-white">
           <h3 className="text-2xl font-semibold mb-2">Experience premium</h3>
-          <p className="text-sm sm:text-base text-slate-200">
+          <p className="text-sm sm:text-base text-slate-100">
             Livraison soignee, paiement securise et suivi de commande en temps reel.
           </p>
           <div className="mt-5 flex gap-3">
